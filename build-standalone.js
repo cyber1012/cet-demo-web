@@ -206,6 +206,30 @@ function build() {
   const bankJson = JSON.stringify({ cet4: slim(cet4), cet6: slim(cet6) });
   const bankGzB64 = zlib.gzipSync(Buffer.from(bankJson, 'utf8'), { level: 9 }).toString('base64');
 
+  // ===== publishableKey 注入 =====
+  // 真key 不能进仓库（开源仓库里的 key 会被任何人拿走消耗额度）。
+  // 做法：key 放在 .workbuddy/local-config.json（已 gitignore），
+  // 构建时读取并注入到 window.__WB_CONFIG__。
+  // 没有这个文件 → 开源版构建，AI 功能不可用但其余功能正常。
+  const LOCAL_CFG = path.join(ROOT, '.workbuddy/local-config.json');
+  let wbConfig = null;
+  if (fs.existsSync(LOCAL_CFG)) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(LOCAL_CFG, 'utf8'));
+      if (cfg.publishableKey) {
+        wbConfig = { publishableKey: cfg.publishableKey };
+      }
+    } catch (e) {
+      console.log('  ! local-config.json 解析失败，AI 功能将不可用');
+    }
+  }
+  console.log(
+    '  ' +
+      (wbConfig
+        ? '✓ 已注入 publishableKey（私有版）'
+        : '· 未注入 publishableKey（开源版，AI 功能需自行配置）')
+  );
+
   // ===== 应用 JS =====
   // 收款码内联为 data URI：单文件版双击打开时，
   // 若引用相对路径会显示不出图（file:// 下 fetch 被 CORS 拦）。
@@ -253,6 +277,14 @@ ${css}
 
 <script type="application/gzip" id="wordbank-gz">
 ${bankGzB64}
+</script>
+<script>
+/* ===== 运行时配置（publishableKey）=====
+   真key 只在私有构建里注入（来自 .workbuddy/local-config.json，已 gitignore）。
+   开源版这里是 null —— 部署者需自行在控制台执行：
+     localStorage.setItem('wb.publishableKey', '你的 key')
+   未配置时 AI 批改不可用，词库/背词/错题本等功能不受影响。 */
+window.__WB_CONFIG__ = ${JSON.stringify(wbConfig)};
 </script>
 <script>
 /* 词库以 type="application/gzip" 内联 —— 浏览器不会把它当 JS 解析，
