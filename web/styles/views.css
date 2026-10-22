@@ -1,0 +1,1090 @@
+/**
+ * 页面级样式
+ * 原则：留白充足、色彩克制、动效精准。
+ * 「高级感」来自节奏，不是来自装饰。
+ */
+
+/* ===== 通用容器 ===== */
+.p-lg { padding: var(--s-lg); }
+.p-md { padding: var(--s-md); }
+.my-lg { margin: var(--s-lg) 0; }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-sm);
+}
+
+.hairline {
+  height: 1px;
+  background: var(--hairline);
+  border: none;
+}
+
+.caption {
+  font-size: var(--t-small);
+  line-height: 1.5;
+}
+
+/* ===== 计时器 ===== */
+.timer {
+  padding: 6px 16px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--lime);
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 首页：AI 批改主视觉 =====
+ * 光效目标：像云在飘 —— 形状缓慢变形、边缘在溶解、永不重复。
+ * 手段：多团不同速率/相位的模糊光斑缓慢漂移 + 独立的慢速形变。
+ * 避免：规律扫光（机械感）、整块移动（像滑块而不是云）。
+ */
+.hero-ai {
+  position: relative;
+  padding: var(--s-xl) var(--s-lg);
+  border-radius: var(--r-xl);
+  background: #0F0F0E;
+  color: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--d-base) var(--e-out);
+}
+
+.hero-ai:active {
+  transform: scale(0.99);
+}
+
+/* 云团容器：多层光斑各自独立漂移，周期互不成整数倍，永不重复
+ *
+ * 性能要点：这里绝对不能加 filter: blur()。
+ * 容器内有 4 个持续动画的子元素，一旦加了 filter，
+ * 浏览器每帧都要对整个合成结果重新做一次大面积高斯模糊并重新光栅化 ——
+ * 移动端 GPU 直接被压死，表现为切页卡顿、动画掉帧。
+ * 径向渐变本身边缘就是软的，不需要额外模糊。
+ */
+.hero-ai-clouds {
+  position: absolute;
+  inset: -30% -20% -30% -20%;
+  pointer-events: none;
+  /* 提升为独立合成层，让 transform 动画只走 GPU，不触发重绘 */
+  transform: translateZ(0);
+}
+
+/* 每一团云：不同大小、不同周期、不同相位、不同漂移方向 */
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  /* 只做 transform / opacity 动画 —— 这两个属性不触发重绘 */
+  backface-visibility: hidden;
+}
+
+/* 云1：薰衣草紫，最大最慢 */
+.cloud-1 {
+  width: 300px;
+  height: 300px;
+  top: -10%;
+  right: 4%;
+  background: radial-gradient(circle, rgba(185, 156, 255, 0.42) 0%, rgba(185, 156, 255, 0.16) 42%, transparent 72%);
+  animation: cloudDrift1 26s ease-in-out infinite;
+}
+
+/* 云2：薄荷绿，中等速度，方向相反 */
+.cloud-2 {
+  width: 220px;
+  height: 220px;
+  bottom: -6%;
+  right: 26%;
+  background: radial-gradient(circle, rgba(159, 232, 196, 0.30) 0%, rgba(159, 232, 196, 0.12) 40%, transparent 70%);
+  animation: cloudDrift2 19s ease-in-out infinite;
+}
+
+/* 云3：极淡的暖色，只做背景扰动 */
+.cloud-3 {
+  width: 180px;
+  height: 180px;
+  top: 34%;
+  right: 42%;
+  background: radial-gradient(circle, rgba(246, 214, 206, 0.20) 0%, rgba(246, 214, 206, 0.08) 40%, transparent 72%);
+  animation: cloudDrift3 31s ease-in-out infinite;
+}
+
+/* 云4：柠檬微光，制造一点点呼吸的活力 */
+.cloud-4 {
+  width: 130px;
+  height: 130px;
+  bottom: 22%;
+  right: 8%;
+  background: radial-gradient(circle, rgba(215, 242, 107, 0.18) 0%, rgba(215, 242, 107, 0.07) 40%, transparent 70%);
+  animation: cloudDrift1 23s ease-in-out infinite reverse;
+}
+
+/* 关键：关键帧刻意不设百分比，交给浏览器插值产生不规则感。
+   同时加入轻微的形变（scale 非等比），让边缘像在溶解而非刚体平移。 */
+@keyframes cloudDrift1 {
+  0%   { transform: translate3d(0, 0, 0) scale(1, 1); }
+  23%  { transform: translate3d(-26px, 18px, 0) scale(1.08, 0.93); }
+  47%  { transform: translate3d(-8px, -22px, 0) scale(0.95, 1.06); }
+  68%  { transform: translate3d(22px, 12px, 0) scale(1.04, 0.97); }
+  100% { transform: translate3d(0, 0, 0) scale(1, 1); }
+}
+
+@keyframes cloudDrift2 {
+  0%   { transform: translate3d(0, 0, 0) scale(1, 1); }
+  31%  { transform: translate3d(30px, -16px, 0) scale(0.92, 1.08); }
+  57%  { transform: translate3d(10px, 24px, 0) scale(1.07, 0.94); }
+  79%  { transform: translate3d(-24px, 8px, 0) scale(0.98, 1.03); }
+  100% { transform: translate3d(0, 0, 0) scale(1, 1); }
+}
+
+@keyframes cloudDrift3 {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  40%  { transform: translate3d(-18px, -20px, 0) scale(1.12, 0.9); }
+  75%  { transform: translate3d(14px, 16px, 0) scale(0.93, 1.07); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+/* 极缓的整体明暗呼吸，模拟云层厚薄变化 */
+.hero-ai::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 70% 20%, rgba(255, 255, 255, 0.035), transparent 60%);
+  pointer-events: none;
+  animation: cloudBreathe 9s ease-in-out infinite;
+}
+
+@keyframes cloudBreathe {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
+}
+
+/* 尊重系统的「减少动态效果」设置 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-ai-clouds,
+  .hero-ai::after,
+  .hero-ai-btn {
+    animation: none !important;
+  }
+}
+
+/* 页面不可见时暂停所有动画。
+   手机切到别的 App、或切到其他 Tab 后，浏览器仍在跑这些关键帧 ——
+   白白消耗电量与 GPU。visibilitychange 时会加上 paused 类。 */
+body.page-hidden .hero-ai-clouds,
+body.page-hidden .hero-ai::after,
+body.page-hidden .hero-ai-btn::before,
+body.page-hidden .spinner,
+body.page-hidden .dot,
+body.page-hidden .rec-pulse {
+  animation-play-state: paused !important;
+}
+
+.hero-ai-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 外层容器：承载呼吸光晕（position: relative 让 ::before 有定位基准） */
+.hero-ai-cta {
+  position: relative;
+  z-index: 0;
+  flex-shrink: 0;
+}
+
+/* 开始按钮：常态有轻微的呼吸感，hover 放大，点击下压
+ *
+ * 性能：呼吸光晕不用 box-shadow 扩散（那会每帧重绘整个按钮）。
+ * 改用伪元素的 transform: scale —— 只走合成层，不触发重绘。
+ */
+.hero-ai-btn {
+  position: relative;
+  z-index: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: var(--r-pill);
+  background: var(--lime);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform var(--d-fast) var(--e-snap);
+  will-change: transform;
+}
+
+/* 光晕层：脱离按钮自身，在按钮「背后」扩散。
+ *
+ * 上一版踩过的坑：把 ::before 放在按钮内 + z-index:-1 + overflow:hidden，
+ * 结果光晕被按钮背景完全遮住 —— 视觉上等于没有动画。
+ * 现在光晕放在 .hero-ai-cta（外层容器）上，z-index 低于按钮，
+ * 才能真正「溢」出按钮边界。
+ */
+.hero-ai-cta::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 44px;
+  margin: -22px 0 0 -48px;
+  border-radius: var(--r-pill);
+  background: var(--lime);
+  opacity: 0.5;
+  transform: scale(1);
+  z-index: -1;
+  animation: btnBreath 3.2s var(--e-out) infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@keyframes btnBreath {
+  0%, 100% { transform: scale(1);    opacity: 0.4; }
+  50%      { transform: scale(1.35); opacity: 0; }
+}
+
+/* 箭头：静止时不动，hover 才右移 —— 避免常态持续动画分散注意力 */
+.hero-ai-arrow {
+  display: inline-block;
+  transition: transform var(--d-base) var(--e-out);
+}
+
+.hero-ai:hover .hero-ai-arrow {
+  transform: translateX(3px);
+}
+
+.hero-ai:hover .hero-ai-btn {
+  transform: scale(1.06);
+}
+
+.hero-ai:active .hero-ai-btn {
+  transform: scale(0.95);
+  animation: none;
+}
+
+/* 按钮右侧的小箭头，随呼吸轻微位移 */
+.hero-ai-arrow {
+  display: inline-block;
+  transition: transform var(--d-base) var(--e-snap);
+}
+
+.hero-ai:hover .hero-ai-arrow {
+  transform: translateX(3px);
+}
+
+.hero-ai-stats {
+  position: relative;
+  display: flex;
+  gap: var(--s-lg);
+  margin-top: var(--s-lg);
+  padding-top: var(--s-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hero-ai-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-ai-stats b {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.hero-ai-stats span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ===== 分段控件 ===== */
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--cream-deep);
+}
+
+.seg-item {
+  flex: 1;
+  height: 38px;
+  border-radius: var(--r-pill);
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink-mute);
+  transition: all var(--d-base) var(--e-out);
+}
+
+.seg-item.on {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--sh-sm);
+}
+
+/* ===== 题号选择器 ===== */
+.picker {
+  display: flex;
+  gap: var(--s-xs);
+}
+
+.picker-i {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cream-deep);
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 700;
+  transition: all var(--d-fast) var(--e-spring);
+}
+
+.picker-i.on {
+  background: var(--ink);
+  color: var(--lime);
+  transform: scale(1.08);
+}
+
+/* ===== 筛选 chip ===== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  transition: all var(--d-fast) var(--e-out);
+}
+
+.chip.on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.chip-n {
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== 任务勾选：细节决定质感 =====
+ * 原则：勾选圈先「弹一下」再变色，✓ 用 SVG 描边动画画出，
+ * 文字用颜色+透明度渐变而非突然变灰。整体时长控制在 300ms 内，
+ * 超过就会显得拖沓。
+ */
+.task-row {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--d-base) var(--e-out);
+}
+
+.task-row:active {
+  opacity: 0.6;
+}
+
+/* 勾选圈：弹性缩放 + 颜色过渡 */
+.task-row .ring {
+  transition:
+    background-color var(--d-base) var(--e-out),
+    border-color var(--d-base) var(--e-out),
+    transform var(--d-base) var(--e-snap);
+}
+
+.task-row:active .ring {
+  transform: scale(0.88);
+}
+
+.task-row .ring.done {
+  transform: scale(1);
+}
+
+/* ✓ 用 SVG 描边动画画出，比直接显示字符更有「被画出来」的感觉 */
+.ring-tick {
+  width: 13px;
+  height: 13px;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  opacity: 0;
+  transition: none;
+}
+
+.ring.done .ring-tick {
+  opacity: 1;
+  animation: tickDraw 320ms var(--e-out) forwards;
+}
+
+@keyframes tickDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 任务文字：颜色渐变 + 划线
+   注意：划线由 .done 驱动，而 .done 必须在**初始渲染时就存在**，
+   否则刷新后 class 丢失、划线消失（曾出现这个 bug）。
+   下面的 :has() 是兜底：只要勾选圈是 done，文字就一定有划线。 */
+.task-text {
+  color: var(--ink);
+  transition:
+    color var(--d-base) var(--e-out),
+    opacity var(--d-base) var(--e-out);
+}
+
+.task-text.done,
+.task-row:has(.ring.done) .task-text {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink-faint);
+  text-decoration-thickness: 1px;
+}
+
+/* 进度数字跳动 */
+.bump {
+  animation: bump 340ms var(--e-snap);
+}
+
+@keyframes bump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+/* 全部完成时卡片的一次性高光 */
+.flash {
+  animation: flash 620ms var(--e-out);
+}
+
+@keyframes flash {
+  0%   { box-shadow: var(--sh-md); }
+  30%  { box-shadow: 0 0 0 3px rgba(215, 242, 107, 0.55), var(--sh-md); }
+  100% { box-shadow: var(--sh-md); }
+}
+
+/* ===== 登录提示条 ===== */
+.login-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  margin-top: var(--s-lg);
+  padding: var(--s-md) var(--s-md);
+  border-radius: var(--r-lg);
+  background: var(--grad-lime);
+  cursor: pointer;
+  transition: transform var(--d-fast) var(--e-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.login-banner:active {
+  transform: scale(0.98);
+}
+
+.login-banner-t {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.login-banner-s {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(15, 15, 14, 0.6);
+}
+
+.login-banner-btn {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--lime);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-err {
+  margin-top: var(--s-sm);
+  font-size: 12px;
+  color: var(--crimson);
+  min-height: 16px;
+}
+
+/* ===== 拍照上传区 =====
+ * 写在纸上是主要场景，所以这个入口要显眼、不能像附加功能。
+ */
+.capture {
+  position: relative;
+}
+
+.capture-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.capture-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 88rpx;
+  border-radius: var(--r-lg);
+  /* 虚线边框：暗示「点这里上传」，但不喧宾夺主 */
+  border: 2px dashed var(--hairline-strong);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all var(--d-base) var(--e-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.capture-btn:active {
+  transform: scale(0.98);
+  border-color: var(--ink);
+}
+
+/* 相机图标：内联 SVG 线性图标
+   不用 emoji —— emoji 在各系统字形差异大，与克制的线性风格不符 */
+.capture-ico {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+/* 折叠式链接：用于「需要时再展开」的次要功能 */
+.link-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-decoration-color: var(--hairline);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color var(--d-fast) var(--e-out);
+}
+
+.link-toggle:hover,
+.link-toggle:active {
+  color: var(--ink);
+}
+
+.capture-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ===== 评分维度网格（替代题库卡）===== */
+.dims {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.dim {
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.dim-n {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dim-d {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(15, 15, 14, 0.55);
+}
+
+/* ===== 上次批改条 =====
+ * 分数比历史更重要：用户要看到的是「上次扣在哪」。
+ */
+.last-review {
+  display: flex;
+  align-items: center;
+  gap: var(--s-md);
+  padding: var(--s-md) var(--s-lg);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+}
+
+.last-n {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.last-d {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+
+/* 通用小标签见 app.css 的 .tag */
+
+/* ===== 高分句式卡 ===== */
+.phrase {
+  padding: var(--s-md);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  border: 1px solid var(--hairline);
+}
+
+.phrase-en {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.phrase-cn {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--ink-mute);
+}
+
+.phrase-note {
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-faint);
+}
+
+/* ===== 加载态 ===== */
+.loading-card {
+  padding: var(--s-xl);
+  border-radius: var(--r-xl);
+  background: var(--ink);
+  color: #fff;
+  text-align: center;
+  max-width: 300px;
+}
+
+/* 三点跳动的加载指示：比转圈更轻快，暗示「正在处理」而非「卡死」 */
+.loader {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.loader span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--lime);
+  animation: dotBounce 1s var(--e-out) infinite;
+}
+
+.loader span:nth-child(2) { animation-delay: 0.15s; }
+.loader span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes dotBounce {
+  0%, 70%, 100% { transform: translateY(0); opacity: 0.45; }
+  35%           { transform: translateY(-7px); opacity: 1; }
+}
+
+.spinner {
+  width: 26px;
+  height: 26px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: var(--lime);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.loading-stream {
+  margin-top: var(--s-sm);
+  max-height: 76px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: rgba(255, 255, 255, 0.35);
+  /* 顶部淡出，暗示内容在往上涌 */
+  mask-image: linear-gradient(to bottom, transparent, #000 40%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 40%);
+}
+
+/* ===== 批改结果块 ===== */
+.blk {
+  margin-bottom: var(--s-lg);
+}
+
+.blk-t {
+  margin-bottom: var(--s-sm);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.blk-t.warn { color: var(--tangerine); }
+.blk-t.good { color: var(--jade); }
+
+/* 错误条目：左侧色条是全站统一的语义语言 */
+.err {
+  padding: var(--s-md);
+  margin-bottom: var(--s-xs);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  border-left: 3px solid var(--tangerine);
+}
+
+.err-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-xs);
+  margin-bottom: 4px;
+}
+
+.err-o {
+  font-size: 13px;
+  color: var(--tangerine);
+  text-decoration: line-through;
+  flex: 1;
+}
+
+.err-c {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--jade);
+  margin-bottom: 4px;
+}
+
+/* 升级表达 */
+.up {
+  padding: var(--s-md);
+  margin-bottom: var(--s-xs);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  border-left: 3px solid var(--azure);
+}
+
+.up-row {
+  display: flex;
+  gap: var(--s-xs);
+  align-items: flex-start;
+}
+
+.up-tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--cream-deep);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-mute);
+  margin-top: 2px;
+}
+
+.up-tag.hi {
+  background: var(--ink);
+  color: var(--lime);
+}
+
+.up-o {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+.up-u {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+/* ===== 录音 ===== */
+.rec-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-lg) 0;
+}
+
+.rec-pulse {
+  position: absolute;
+  top: var(--s-lg);
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline);
+  pointer-events: none;
+}
+
+.rec-pulse.on {
+  border-color: var(--tangerine);
+  animation: pulse 1.6s var(--e-out) infinite;
+}
+
+@keyframes pulse {
+  0%   { transform: scale(1);    opacity: 0.6; }
+  100% { transform: scale(1.7);  opacity: 0; }
+}
+
+.rec-btn {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--lime);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--sh-lg);
+  transition: all var(--d-base) var(--e-spring);
+}
+
+/* 未录音时显示 start 单词，字号略小以适配 */
+.rec-btn .rec-time {
+  font-size: 17px;
+}
+
+/* 录音中显示秒数，字号放大 */
+.rec-btn.on .rec-time {
+  font-size: 21px;
+}
+
+.rec-btn.on {
+  background: var(--grad-ember);
+  color: #fff;
+  transform: scale(0.94);
+}
+
+.rec-tip {
+  margin-top: var(--s-md);
+  font-size: 12px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ===== 词汇卡 ===== */
+.wordcard {
+  padding: var(--s-xxl) var(--s-lg);
+  border-radius: var(--r-xl);
+  background: var(--grad-aurora);
+  box-shadow: var(--sh-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* 固定最小高度：显示释义时卡片不跳变。
+     否则每翻一张卡，下方按钮都会上下移动一截 —— 这是「震荡感」的另一半来源。 */
+  min-height: 240px;
+  justify-content: center;
+  transition: min-height var(--d-base) var(--e-out);
+}
+
+.wordcard-word {
+  margin-top: var(--s-md);
+  font-size: clamp(32px, 7vw, 48px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.wordcard-ph {
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(15, 15, 14, 0.5);
+}
+
+.wordcard-mean {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* 掌握度竖条 */
+.mastery-bar {
+  width: 4px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  background: var(--hairline);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mastery-fill {
+  width: 100%;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+}
+
+/* ===== 支持作者（打赏）=====
+ * 刻意做得安静：默认只有一行小字，点击才展开二维码。
+ * 学习工具不该让人第一眼以为要收费 —— 愿意支持的人主动找即可。 */
+.support {
+  padding-bottom: var(--s-xl);
+}
+
+.support-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: var(--s-sm) 0;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--d-fast) var(--e-out);
+}
+
+.support-toggle:hover,
+.support-toggle:active {
+  color: var(--ink-mute);
+}
+
+/* 展开箭头：静止时朝下（∨），展开后旋转 180° 朝上（∧） */
+.support-chev {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform var(--d-base) var(--e-out);
+}
+
+.support-chev-svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+  /* 保险：确保不会被任何全局样式填充实心 */
+  fill: none;
+  overflow: visible;
+}
+
+.support-chev.up {
+  transform: rotate(180deg);
+}
+
+.support-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--s-lg) var(--s-md) var(--s-md);
+  border-radius: var(--r-lg);
+  background: var(--cream-deep);
+  animation: supportIn 280ms var(--e-out);
+}
+
+@keyframes supportIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 收款码容器。
+   图片本身就是白卡，不需要额外 padding —— 加了反而出现白色边框套白色。 */
+.support-qr {
+  border-radius: var(--r-md);
+  line-height: 0;
+  overflow: hidden;
+}
+
+/* 等比例嵌入：只设宽度，高度由浏览器按原始比例自动计算。
+   绝不能写死 height —— 那会把竖版收款码压扁，二维码扫不出来。 */
+.support-qr img {
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  height: auto;   /* 关键：按原比例缩放 */
+  border-radius: 4px;
+  /* 裁剪后的实际尺寸 506×540（已去掉绿色背景与底部 logo），
+     预占位避免加载时布局跳动 */
+  aspect-ratio: 506 / 540;
+}
+
+.support-title {
+  margin-top: var(--s-md);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
+
+.support-text {
+  margin-top: var(--s-xs);
+  max-width: 260px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-mute);
+  text-align: center;
+}
+
+.support-hint {
+  margin-top: var(--s-sm);
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ===== 结果浮层内部 ===== */
+.sheet .numeral {
+  font-size: 72px;
+}

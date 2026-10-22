@@ -1,0 +1,30 @@
+# 依赖
+node_modules/
+
+# 中间产物与本地数据
+.workbuddy/
+
+# 第三方词典数据（62.9MB，ECDICT，版权归原作者，本地保留作备用）
+ecdict.csv
+ecdict_readme.md
+
+# 构建产物（可由 node build-standalone.js 重新生成）
+standalone-web/
+四六级AI批改.html
+
+# 个人收款码（真实版，仅本地私有使用，不入库）
+web/data/qr-image.jpg
+
+# 词库数据 —— 有道考神/新东方授权内容，不入库
+# 用 node scripts/prepare-books.js + node build-wordbank.js 自行生成
+web/data/cet4.json
+web/data/cet6.json
+
+# WorkBuddy 部署标记
+.wbapp_*.genie
+.wbapp_*.privacy.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.log
