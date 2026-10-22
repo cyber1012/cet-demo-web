@@ -1,0 +1,119 @@
+/**
+ * 设计令牌 · Web 版
+ * 审美谱系：Linear / Vercel / Arc —— 克制的排版、大量留白、
+ * 精准的缓动曲线，色彩只用在真正重要的地方。
+ *
+ * 全部视觉参数集中在此。改这一个文件即全局生效。
+ */
+
+:root {
+  /* ===== 中性色（占画面90%，克制是高级感的来源） ===== */
+  --cream: #F7F6F2;
+  --cream-deep: #EDEBE4;
+  --paper: #FFFFFF;
+  --ink: #0F0F0E;
+  --ink-soft: #2B2B27;
+  --ink-mute: #6E6E64;
+  --ink-faint: #A8A89C;
+  --hairline: rgba(15, 15, 14, 0.08);
+  --hairline-strong: rgba(15, 15, 14, 0.14);
+
+  /* ===== 撞色（只用在关键位置：分数、进度、高亮） ===== */
+  --lime: #D9F26B;
+  --tangerine: #FF5A2B;
+  --azure: #2F6BFF;
+  --violet: #B99CFF;
+  --mint: #9FE8C4;
+  --crimson: #E5484D;
+  --jade: #2E9E5B;
+
+  /* ===== 渐变（克制使用） ===== */
+  --grad-violet: linear-gradient(135deg, #C9B6FF 0%, #AE93F5 100%);
+  --grad-mint: linear-gradient(135deg, #B4F0D2 0%, #8FDFBB 100%);
+  --grad-lime: linear-gradient(135deg, #E4F88A 0%, #C9EA52 100%);
+  --grad-ember: linear-gradient(135deg, #FF7A45 0%, #FF4F1F 100%);
+  --grad-azure: linear-gradient(135deg, #5B8CFF 0%, #2F5BEF 100%);
+  --grad-aurora: linear-gradient(150deg, rgba(196,232,214,0.78) 0%, rgba(214,206,246,0.72) 45%, rgba(246,214,206,0.70) 100%);
+
+  /* ===== 字体：西文用系统几何体，中文用苹方 ===== */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI',
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* ===== 字阶（Web 用 px，配合 clamp 做响应式） ===== */
+  --t-display: clamp(44px, 8vw, 76px);
+  --t-numeral: clamp(56px, 12vw, 104px);
+  --t-title: clamp(24px, 4vw, 34px);
+  --t-subtitle: clamp(18px, 2.6vw, 22px);
+  --t-body: 15px;
+  --t-small: 13px;
+  --t-label: 11px;
+
+  /* ===== 间距（8px 基准） ===== */
+  --s-xxs: 4px;
+  --s-xs: 8px;
+  --s-sm: 12px;
+  --s-md: 16px;
+  --s-lg: 24px;
+  --s-xl: 32px;
+  --s-xxl: 48px;
+  --s-xxxl: 72px;
+
+  /* ===== 圆角 ===== */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* ===== 阴影：极轻，靠层次而非重投影 ===== */
+  --sh-sm: 0 1px 2px rgba(15, 15, 14, 0.04);
+  --sh-md: 0 4px 16px rgba(15, 15, 14, 0.06);
+  --sh-lg: 0 12px 40px rgba(15, 15, 14, 0.10);
+  --sh-glass: 0 8px 32px rgba(15, 15, 14, 0.08);
+
+  /* ===== 毛玻璃（核心质感） ===== */
+  --glass-bg: rgba(255, 255, 255, 0.58);
+  --glass-line: rgba(255, 255, 255, 0.75);
+  /* 28px 在移动端偏重（backdrop-filter 每次重绘都要重新采样背景），
+     20px 视觉几乎无差别，合成开销却低一截 */
+  --blur: blur(20px) saturate(1.5);
+
+  /* ===== 动效：ease-out 是「高级感」的另一半 ===== */
+  --e-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --e-snap: cubic-bezier(0.34, 1.42, 0.64, 1);
+  --e-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --d-fast: 140ms;
+  --d-base: 260ms;
+  --d-slow: 480ms;
+
+  /* ===== 布局 ===== */
+  --shell-max: 480px;
+  --nav-h: 64px;
+}
+
+/* ===== 暗色模式（跟随系统） ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cream: #131311;
+    --cream-deep: #1C1C19;
+    --paper: #1F1F1C;
+    --ink: #F5F4EF;
+    --ink-soft: #D8D7D0;
+    --ink-mute: #93938A;
+    --ink-faint: #6A6A62;
+    --hairline: rgba(245, 244, 239, 0.10);
+    --hairline-strong: rgba(245, 244, 239, 0.18);
+
+    --grad-aurora: linear-gradient(150deg, rgba(38,58,52,0.78) 0%, rgba(48,44,68,0.72) 45%, rgba(64,48,44,0.70) 100%);
+    --grad-lime: linear-gradient(135deg, #CBE85A 0%, #B0D13E 100%);
+
+    --glass-bg: rgba(32, 32, 29, 0.62);
+    --glass-line: rgba(245, 244, 239, 0.12);
+
+    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --sh-md: 0 4px 16px rgba(0, 0, 0, 0.36);
+    --sh-lg: 0 12px 40px rgba(0, 0, 0, 0.44);
+  }
+}

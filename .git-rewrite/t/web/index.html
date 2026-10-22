@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#F7F6F2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="description" content="按四六级官方评分标准，用 AI 批改作文、翻译与口语">
+  <title>四六级备考 · AI 批改</title>
+  <link rel="stylesheet" href="./styles/app.css">
+  <link rel="stylesheet" href="./styles/views.css">
+</head>
+<body>
+  <div class="shell">
+    <main id="main"></main>
+  </div>
+  <nav id="nav"></nav>
+
+  <!-- 云服务 SDK（免密钥，模型调用能力） -->
+  <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
