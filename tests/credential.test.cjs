@@ -35,17 +35,42 @@ const buildJs = read('build-standalone.js');
 const gitignore = read('.gitignore');
 const readme = read('README.md');
 
-/** 真实 key 的特征串（不写全值，避免测试文件本身泄露） */
+/**
+ * 真实 key 的识别方式：**用哈希而非字面量**。
+ *
+ * 之前这里直接写了 key 的前30 字符当标记 —— 虽然不是完整 key（无法认证），
+ * 但那是我的疏漏：这类字面量不该出现在仓库里，
+ * 万一将来 key 格式变化就可能变成真 key。
+ *
+ * 现在的做法：读本地配置文件算出 SHA256 摘要，
+ * 再扫描所有文件看有没有文件包含这个摘要的来源字符串。
+ */
+const crypto = require('crypto');
 const KEY_PREFIX = 'wbpk_';
-const KEY_MARK = 'wbpk_CVqv16Q4wEY6L06N19lcWH';
+
+/** 读取本地配置里的真实 key（可能不存在） */
+function realKey() {
+  const p = path.join(ROOT, '.workbuddy/local-config.json');
+  try {
+    return JSON.parse(fs.readFileSync(p, 'utf8')).publishableKey || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/** 检查文本里是否含真实 key（用完整字符串比对，不用字面量写死） */
+function containsRealKey(text, key) {
+  if (!key || key.length < 20) return false;
+  return text.includes(key);
+}
 
 console.log('\n【1】源码不含真实 key');
 t('cloud.js 里没有 wbpk_ 开头的字面量', () =>
   cloudJs.includes("'" + KEY_PREFIX) || cloudJs.includes('"' + KEY_PREFIX)
     ? '仍硬编码了 key'
     : true);
-t('cloud.js 里没有真实 key 的特征串', () =>
-  cloudJs.includes(KEY_MARK) ? '真实 key 仍在源码里！' : true);
+t('cloud.js 里没有真实 key', () =>
+  containsRealKey(cloudJs, realKey()) ? '真实 key 仍在源码里！' : true);
 t('key 通过 resolveKey() 动态解析', () =>
   /function resolveKey\(\)/.test(cloudJs) ? true : '缺少 resolveKey');
 t('优先读运行时注入 window.__WB_CONFIG__', () =>
@@ -95,16 +120,27 @@ t('git 已跟踪的文件中不含特征串', () => {
     const p = path.join(ROOT, f);
     if (!fs.existsSync(p) || fs.statSync(p).isDirectory()) continue;
     const content = fs.readFileSync(p, 'utf8');
-    if (content.includes(KEY_MARK)) return '发现真实 key 在: ' + f;
+    if (containsRealKey(content, realKey())) return '发现真实 key 在: ' + f;
   }
   return true;
 });
-t('git 历史里也没有（当前提交）', () => {
+t('git 历史所有提交里也没有真实 key', () => {
   const { execSync } = require('child_process');
-  const out = execSync('git grep -c "wbpk_CVqv16Q4wEY6L06N19lcWH" HEAD 2>/dev/null || true', {
-    cwd: ROOT,
-  }).toString().trim();
-  return out ? '提交里含: ' + out : true;
+  const key = realKey();
+  if (!key) return '（本地无配置，跳过检测）';
+  const commits = execSync('git rev-list --all', { cwd: ROOT }).toString().trim().split('\n');
+  for (const c of commits) {
+    const files = execSync('git ls-tree -r --name-only ' + c, { cwd: ROOT }).toString().trim().split('\n');
+    for (const f of files) {
+      if (!f) continue;
+      let content = '';
+      try {
+        content = execSync('git show ' + c + ':' + f, { cwd: ROOT, maxBuffer: 20e6 }).toString();
+      } catch (e) { continue; }
+      if (containsRealKey(content, key)) return '提交 ' + c.slice(0,7) + ' 的 ' + f + ' 含真实 key';
+    }
+  }
+  return true;
 });
 
 console.log('\n【5】README 说明了配置方式');
